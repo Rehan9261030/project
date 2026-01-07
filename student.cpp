@@ -1,369 +1,320 @@
 #include <iostream>
 #include <vector>
+#include <string>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
-struct Book
-{
+// STRUCTURES
+
+struct Book {
     int id;
     string name;
-    bool issued;
+    int quantity; // it will check the books
 };
 
-struct grade
-{
+struct grade {
     int id;
     string name;
     bool present;
     float marks;
-    char grade;
+    char gradeChar;
 };
-struct Student
-{
+
+struct Student {
     int id;
     string name;
     int age;
-    double cnic;
+    string cnic;
 };
 
+// Gbl Vectors
 vector<Book> books;
 vector<grade> grading;
 vector<Student> admission;
 
-void addStudent()
-{
+// FILE HANDLING
+
+void saveAllData() {
+    // Save Students
+    ofstream sFile("students.txt");
+    for (const auto& s : admission) {
+        sFile << s.id << "," << s.name << "," << s.age << "," << s.cnic << endl;
+    }
+    sFile.close();
+
+    // Save Books (Using Quantity)
+    ofstream bFile("books.txt");
+    for (const auto& b : books) {
+        bFile << b.id << "," << b.name << "," << b.quantity << endl;
+    }
+    bFile.close();
+
+    // Save Grading
+    ofstream gFile("grading.txt");
+    for (const auto& g : grading) {
+        gFile << g.id << "," << g.name << "," << g.present << "," << g.marks << "," << g.gradeChar << endl;
+    }
+    gFile.close();
+}
+
+void loadAllData() {
+    string line, temp;
+    admission.clear();
+    books.clear();
+    grading.clear();
+
+    // Load Students
+    ifstream sFile("students.txt");
+    while (getline(sFile, line)) {
+        stringstream ss(line);
+        Student s;
+        getline(ss, temp, ','); s.id = stoi(temp);
+        getline(ss, s.name, ',');
+        getline(ss, temp, ','); s.age = stoi(temp);
+        getline(ss, temp, ','); s.cnic = stod(temp);
+        admission.push_back(s);
+    }
+    sFile.close();
+
+    // Load Books
+    ifstream bFile("books.txt");
+    while (getline(bFile, line)) {
+        stringstream ss(line);
+        Book b;
+        if(getline(ss, temp, ',')) {
+            b.id = stoi(temp);
+            getline(ss, b.name, ',');
+            getline(ss, temp, ','); b.quantity = stoi(temp);
+            books.push_back(b);
+        }
+    }
+    bFile.close();
+
+    // Load Grading
+    ifstream gFile("grading.txt");
+    while (getline(gFile, line)) {
+        stringstream ss(line);
+        grade g;
+        getline(ss, temp, ','); g.id = stoi(temp);
+        getline(ss, g.name, ',');
+        getline(ss, temp, ','); g.present = (temp == "1");
+        getline(ss, temp, ','); g.marks = stof(temp);
+        getline(ss, temp, ','); g.gradeChar = temp[0];
+        grading.push_back(g);
+    }
+    gFile.close();
+}
+
+//  FUNCTIONS 
+
+void addStudent() {
     Student s;
-    cout << "Enter ID: ";
+    cout << "Enter ID: "; 
     cin >> s.id;
     cin.ignore();
     cout << "Enter Name: ";
-    getline(cin, s.name);
+     getline(cin, s.name);
     cout << "Enter Age: ";
-    cin >> s.age;
-    cout<<"Enter your CNIC:";
-    cin>> s.cnic;
+     cin >> s.age;
+    cout << "Enter CNIC (xxxxx-xxxxxxx-x): ";
+     cin >> s.cnic;
     admission.push_back(s);
-    cout << "Student added successfully.\n";
+    saveAllData();
+    cout << "Student saved.\n";
 }
 
-void displayStudents()
-{
-    if (admission.empty())
-    {
-        cout << "No records found.\n";
-        return;
-    }
-    for (int i = 0; i < admission.size(); i++)
-    {
-        cout << "ID: " << admission[i].id << endl;
-        cout << "Name: " << admission[i].name << endl;
-        cout << "Age: " << admission[i].age << endl;
-        cout << "CNIC: " << admission[i].cnic << endl;
-    }
-}
-
-void searchStudent()
-{
+void dismissStudent() {
     int id;
-    cout << "Enter ID to search: ";
-    cin >> id;
-    for (int i = 0; i < admission.size(); i++)
-    {
-        if (admission[i].id == id)
-        {
-            cout << "Student Found!\n";
-            cout << "Name: " << admission[i].name << endl;
-            return;
-        }
-    }
-    cout << "Student not found.\n";
-}
-
-void dismissStudent()
-{
-    int id;
-    cout << "Enter ID to delete: ";
-    cin >> id;
-    for (int i = 0; i < admission.size(); i++)
-    {
-        if (admission[i].id == id)
-        {
+    cout << "Enter ID to delete: "; cin >> id;
+    for (int i = 0; i < admission.size(); i++) {
+        if (admission[i].id == id) {
             admission.erase(admission.begin() + i);
-            cout << "Record deleted successfully.\n";
+            saveAllData();
+            cout << "Record deleted.\n";
             return;
         }
     }
-    cout << "Student not found.\n";
+    cout << "Not found.\n";
 }
 
-void addBook()
-{
+void addBook() {
+    int id;
+    cout << "Enter Book ID: "; cin >> id;
+
+    for (Book &b : books) {
+        if (b.id == id) {
+            int q;
+            cout << "Book exists. Add how many more copies? "; cin >> q;
+            b.quantity += q;
+            saveAllData();
+            cout << "Stock updated.\n";
+            return;
+        }
+    }
+
     Book b;
-    cout << "Enter Book ID: ";
-    cin >> b.id;
-    cout << "Enter Book Name: ";
-    cin >> b.name;
-    b.issued = false;
+    b.id = id;
+    cin.ignore();
+    cout << "Enter Book Name: "; getline(cin, b.name);
+    cout << "Enter Initial Quantity: "; cin >> b.quantity;
     books.push_back(b);
-    cout << "Book added successfully:\n";
+    saveAllData();
+    cout << "New book added.\n";
 }
 
-void displayBooks()
-{
-    if (books.empty())
-    {
-        cout << "No books available.\n";
-         cout << "First add book.\n";
-        return;
-    }
-    for (Book b : books)
-    {
-        cout << "ID: " << b.id<<endl;
-        cout << "Name: " << b.name<<endl;
-        cout<< "Status: ";
-        if(b.issued)
-        cout << "Issued";
-       else
-        cout << "Available";
-        cout << endl;
-    }
-}
-
-void issueBook()
-{
+void issueBook() {
     int id;
-    cout << "Enter Book ID to issue: ";
-    cin >> id;
-    for (Book &b : books)
-    {
-        if (b.id == id && !b.issued)
-        {
-            b.issued = true;
-            cout << "Book issued successfully.\n";
+    cout << "Enter Book ID to issue: "; cin >> id;
+    for (Book &b : books) {
+        if (b.id == id) {
+            if (b.quantity > 0) {
+                b.quantity--;
+                saveAllData();
+                cout << "Book issued. Remaining stock: " << b.quantity << endl;
+            } else {
+                cout << "Error: Out of stock!\n";
+            }
             return;
         }
     }
-    cout << "Book not found or already issued.\n";
+    cout << "Book ID not found.\n";
 }
 
-void addStudents()
-{
-    grade s;
-    cout << "Enter Student ID: ";
-    cin >> s.id;
-    cout << "Enter Student Name: ";
-    cin >> s.name;
-    s.present = false;
-    s.marks = 0;
-    s.grade = '-';
-    grading.push_back(s);
-    cout << "Student added successfully.\n";
-}
-
-void markAttendance()
-{
+void returnBook() {
     int id;
-    cout << "Enter Student ID to mark present: ";
-    cin >> id;
-    for (grade &s : grading)
-    {
-        if (s.id == id)
-        {
+    cout << "Enter Book ID to return: "; cin >> id;
+    for (Book &b : books) {
+        if (b.id == id) {
+            b.quantity++;
+            saveAllData();
+            cout << "Book returned. New stock: " << b.quantity << endl;
+            return;
+        }
+    }
+    cout << "Book ID not found in library records.\n";
+}
+
+char calculateGrade(float m) {
+    if (m >= 80) return 'A';
+    if (m >= 70) return 'B';
+    if (m >= 60) return 'C';
+    if (m >= 50) return 'D';
+    return 'F';
+}
+
+void addStudentsGrading() {
+    grade s;
+    cout << "Enter Student ID: "; cin >> s.id;
+    cin.ignore();
+    cout << "Enter Name: "; getline(cin, s.name);
+    s.present = false; s.marks = 0; s.gradeChar = '-';
+    grading.push_back(s);
+    saveAllData();
+    cout << "Student enrolled in grading.\n";
+}
+
+void removeGradeRecord() {
+    int id;
+    cout << "Enter Student ID to remove from Grading: "; cin >> id;
+    for (int i = 0; i < grading.size(); i++) {
+        if (grading[i].id == id) {
+            grading.erase(grading.begin() + i);
+            saveAllData(); // Update file after deletion
+            cout << "Grading record removed.\n";
+            return;
+        }
+    }
+    cout << "Student ID not found in grading system.\n";
+}
+
+void markAttendance() {
+    int id;
+    cout << "Enter Student ID: "; cin >> id;
+    for (grade &s : grading) {
+        if (s.id == id) {
             s.present = true;
+            saveAllData();
             cout << "Attendance marked.\n";
             return;
         }
     }
-    cout << "Student not found.\n";
 }
 
-void displayAttendance()
-{
-    if (grading.empty())
-    {
-        cout << "No students available.\n";
-        return;
-    }
-    for (auto s : grading)
-    {
-        cout << "ID: " << s.id<<endl;
-        cout << "Name: " << s.name<<endl;
-        cout << "Attendance: "<<endl;
-        if (s.present)
-        {
-            cout<<"Present";
-        }
-        else
-        {
-            cout<<"Absent";
-        }
-        cout<<endl;
-        
-    }
-}
-
-char calculateGrade(float m)
-{
-    if (m >= 80)
-    {
-        return 'A';
-    }
-    else if (m >= 70)
-    {
-        return 'B';
-    }
-    else if (m >= 60)
-    {
-        return 'C';
-    }
-    else if (m >= 50)
-    {
-        return 'D';
-    }
-    else
-    {
-        return 'F';
-    }
-}
-
-void addMarks()
-{
-    int id;
-    float m;
-    cout << "Enter Student ID: ";
-    cin >> id;
-    cout << "Enter Marks: ";
-    cin >> m;
-    for (grade &s : grading)
-    {
-        if (s.id == id)
-        {
+void addMarks() {
+    int id; float m;
+    cout << "Enter ID: "; cin >> id;
+    cout << "Enter Marks: "; cin >> m;
+    for (grade &s : grading) {
+        if (s.id == id) {
             s.marks = m;
-            s.grade = calculateGrade(m);
-            cout << "Marks and grade added.\n";
+            s.gradeChar = calculateGrade(m);
+            saveAllData();
+            cout << "Marks and Grade updated.\n";
             return;
         }
     }
-    cout << "Student not found.\n";
 }
 
-void displayGrades()
-{
-    if (grading.empty())
-    {
-        cout << "No student records available.\n";
-        return;
-    }
-    for (grade s : grading)
-    {
-        cout << "ID: " << s.id <<endl;
-        cout << "Name: " << s.name<<endl;
-        cout << "Marks: " << s.marks<<endl;
-        cout << "Grade: " << s.grade << endl;
-    }
-}
+//  MAIN MENU
 
-int main()
-{
+int main() {
+    loadAllData();
     int choice;
 
-    do
-    {
-        cout << "\n********** MAIN MENU **********\n";
+    do {
+        cout << "\n********** MAIN SYSTEM MENU **********\n";
         cout << "1. Student Management\n";
         cout << "2. Library Management\n";
-        cout << "3. Attendance Management\n";
-        cout << "4. Grading System\n";
-        cout << "5. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
+        cout << "3. Attendance/Grading\n";
+        cout << "4. Exit\n";
+        cout << "Enter Choice: ";
+         cin >> choice;
 
-        switch (choice)
-        {
-        case 1:
-        {
-            int c;
-            do
-            {
-                      
+        switch (choice) {
+            case 1: {
+                int c;
                 cout << "\n--- Student Management ---\n";
-                cout << "1. Add Student\n2. Display Students\n3. Search Student\n4. Delete Student\n5. Back\n";
-                cout<<"Enter your choice:";
+                cout << "1. Add Student\n2. Delete Student\n3. View All\n4. Back\n";
+                cout << "Enter Choice: ";
                 cin >> c;
-
                 if (c == 1) addStudent();
-                else if (c == 2) displayStudents();
-                else if (c == 3) searchStudent();
-                else if (c == 4) dismissStudent();
-                else if (c != 5) cout << "Invalid option.\n";
-
-            } while (c != 5);
-            break;
-        }
-
-        case 2:
-        {
-            int c;
-            do
-            {
-                cout << "\n--- Library Menu ---\n";
-                cout << "1. Add Book\n  2. Display Books\n 3. Issue Book\n 4. Back\n";
-                cout<<"Enter your choice:";
+                else if (c == 2) dismissStudent();
+                else if (c == 3) {
+                    for(auto s : admission) cout << s.id << " | " << s.name << " | Age: " << s.age << endl;
+                }
+                break;
+            }
+            case 2: {
+                int c;
+                cout << "\n--- Library Management ---\n";
+                cout << "1. Add or Restock Book\n2. Issue Book\n3. Return Book\n4. View Stock\n5. Back\n";
+                cout << "Enter Choice: ";
                 cin >> c;
-
                 if (c == 1) addBook();
-                else if (c == 2) displayBooks();
-                else if (c == 3) issueBook();
-                else if (c != 4) cout << "Invalid option.\n";
-
-            } while (c != 4);
-            break;
-        }
-
-        case 3:
-        {
-            int c;
-            do
-            {
-                cout << "\n--- Attendance Menu ---\n";
-                cout << "1. Add Student\n2. Mark Attendance\n3. View Attendance\n4. Back\n";
+                else if (c == 2) issueBook();
+                else if (c == 3) returnBook();
+                else if (c == 4) {
+                    cout << "ID | Name | Quantity Available\n";
+                    for(auto b : books) cout << b.id << " | " << b.name << " | " << b.quantity << endl;
+                }
+                break;
+            }
+            case 3: {
+                int c;
+                cout << "\n--- Grading Management ---\n";
+                cout << "1. Enroll for Grades\n2. Mark Attendance\n3. Add Marks\n4. Delete Grade\n5. Back\n";
+                cout << "Enter Choice: ";
                 cin >> c;
-
-                if (c == 1) addStudents();
+                if (c == 1) addStudentsGrading();
                 else if (c == 2) markAttendance();
-                else if (c == 3) displayAttendance();
-                else if (c != 4) cout << "Invalid option.\n";
-
-            } while (c != 4);
-            break;
+                else if (c == 3) addMarks();
+                else if (c == 4) removeGradeRecord(); 
+                break;
+            }
         }
-
-        case 4:
-        {
-            int c;
-            do
-            {
-                cout << "\n--- Grading Menu ---\n";
-                cout << "1. Add Marks\n2. View Grades\n3. Back\n";
-                cin >> c;
-
-                if (c == 1) addMarks();
-                else if (c == 2) displayGrades();
-                else if (c != 3) cout << "Invalid option.\n";
-
-            } while (c != 3);
-            break;
-        }
-
-        case 5:
-            cout << "Program exited successfully.\n";
-            break;
-
-        default:
-            cout << "Invalid choice.\n";
-        }
-
-    } while (choice != 5);
+    } while (choice != 4);
 
     return 0;
 }
