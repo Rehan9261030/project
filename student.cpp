@@ -198,11 +198,12 @@ void returnBook() {
 
 char calculateGrade(float m) {
     if (m >= 80) return 'A';
-    if (m >= 70) return 'B';
-    if (m >= 60) return 'C';
-    if (m >= 50) return 'D';
-    return 'F';
+    else if (m >= 70) return 'B';
+    else if (m >= 60) return 'C';
+    else if (m >= 50) return 'D';
+    else return 'F';
 }
+
 
 void addStudentsGrading() {
     grade s;
@@ -318,4 +319,5 @@ int main() {
 
     return 0;
 }
+
 
