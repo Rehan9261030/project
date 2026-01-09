@@ -153,7 +153,7 @@ void addBook() {
             return;
         }
     }
-
+     cout << "Book not found. Add as new book.\n";
     Book b;
     b.id = id;
     cin.ignore();
@@ -318,3 +318,4 @@ int main() {
 
     return 0;
 }
+
